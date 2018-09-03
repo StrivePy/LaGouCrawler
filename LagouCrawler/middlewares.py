@@ -6,15 +6,16 @@
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 import time
+import random
 import os
 import json
 from scrapy.http import HtmlResponse
+from scrapy.exceptions import IgnoreRequest
 from selenium.webdriver import Chrome
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
-from selenium.common.exceptions import NoSuchElementException
 from fake_useragent import UserAgent
 
 
@@ -170,7 +171,7 @@ class LagoucrawlerDownloaderMiddleware(object):
             )
             return response
         except TimeoutException as e:
-            spider.logger.info('Locate Index Element Failed：%s' % e.msg)
+            spider.logger.info('Locate Index Element Failed And Use Proxy')
         # except NoSuchElementException:
             # 如果捕捉到该异常，说明页面被重定向了，没有正常跳转。
             # 给request添加代理，并返回该request，重新请求初始请求。
@@ -218,22 +219,38 @@ class LagoucrawlerDownloaderMiddleware(object):
             # 必须返回一个None，让其它request能够继续被处理
             return None
 
+
+class RandomProxyMiddleware(object):
+
+    def __init__(self, proxy_list=None):
+        self.proxy_list = proxy_list
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(
+            proxy_list=crawler.settings.get('PROXY_LIST')
+        )
+
     def process_response(self, request, response, spider):
         """
-        对于被重定向的request，可以在该函数中使用代理，重新发起新的请求
-        :param request: 重定向之前的request
-        :param response: 重定向之后的response
+        在被默认RedirectMiddleware重定向之前或者被服务器发现被禁之后，给改请求添加代理
+        后重新请求，若再次被重定向或者被禁，则直接舍弃。
+        :param request:
+        :param response:
         :param spider:
         :return: 设置代理的request
         """
-        if response.status in [302, 500, 503]:
-            spider.logger.debug('The %s Use Proxy' % request.url)
-            spider.logger.debug('The %s Uses Proxy' % response.url)
-            proxy = 'http://219.141.153.41:80'
-            request.meta['proxy'] = proxy
-            return request
-        else:
-            return response
+        if response.status in [302, 403, 500, 503]:
+            if not request.meta.get('auto_proxy'):
+                proxy = random.choice(self.proxy_list)
+                request.meta.update({'auto_proxy': True, 'proxy': proxy})
+                new_request = request.replace(meta=request.meta)
+                spider.logger.debug('The <{} {}> Use Proxy: {}'.format(response.status, request.url, proxy))
+                return new_request
+            else:
+                spider.logger.debug('The <{} {}> After Use Proxy Still Redirect'.format(response.status, request.url))
+                raise IgnoreRequest
+        return response
 
 
 class RandomUserAgentMiddleware(object):
@@ -266,9 +283,5 @@ class RandomUserAgentMiddleware(object):
         :return:
         """
         request.headers.setdefault('User-Agent', getattr(self.ua, self.ua_type))
-        spider.logger.debug('The User Agent Is: %s' % getattr(self.ua, self.ua_type))
+        spider.logger.debug('The <{}> User Agent Is: {}'.format(request.url, getattr(self.ua, self.ua_type)))
 
-
-
-import scrapy.downloadermiddlewares.httpproxy
-import scrapy.downloadermiddlewares.robotstxt

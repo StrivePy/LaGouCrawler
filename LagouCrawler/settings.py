@@ -27,7 +27,7 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 0.5
+DOWNLOAD_DELAY = 1
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -65,7 +65,9 @@ DOWNLOADER_MIDDLEWARES = {
     # 在DownloaderMiddleware之前启用自定义的RandomUserAgentMiddlewaer
     'LagouCrawler.middlewares.RandomUserAgentMiddleware': 542,
     # 禁用框架默认启动的UserAgentMiddleware
-    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None
+    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+    #
+    'LagouCrawler.middlewares.RandomProxyMiddleware': 601
 }
 
 # Enable or disable extensions
@@ -120,3 +122,17 @@ MONGO_URI = 'localhost'
 MONGO_DB = 'job'
 # Mongodb表名
 MONGO_COLLECTION = 'works'
+
+# 代理列表
+PROXY_LIST = [
+    'http://113.128.9.11:23143',
+    'http://49.85.3.252:35378',
+    'http://220.162.155.7:42883',
+    'http://121.227.76.45:31745',
+    'http://123.55.93.229:21843',
+    'http://113.128.30.242:30734',
+    'http://114.218.249.134:47110',
+    'http://182.39.4.9:48393',
+    'http://115.205.10.153:22193',
+    'http://110.82.81.120:33957'
+]
