@@ -9,6 +9,7 @@ import time
 import random
 import os
 import json
+import base64
 from scrapy.http import HtmlResponse
 from scrapy.exceptions import IgnoreRequest
 from selenium.webdriver import Chrome
@@ -285,3 +286,26 @@ class RandomUserAgentMiddleware(object):
         request.headers.setdefault('User-Agent', getattr(self.ua, self.ua_type))
         spider.logger.debug('The <{}> User Agent Is: {}'.format(request.url, getattr(self.ua, self.ua_type)))
 
+
+class AbuYunProxyMiddleware(object):
+    """
+    接入阿布云代理服务器，该服务器动态IP1秒最多请求5次。需要在setting中设置下载延迟
+    """
+
+    def __init__(self, settings):
+        self.proxy_server = settings.get('PROXY_SERVER')
+        self.proxy_user = settings.get('PROXY_USER')
+        self.proxy_pass = settings.get('PROXY_PASS')
+        self.proxy_authorization = 'Basic ' + base64.urlsafe_b64encode(
+            bytes((self.proxy_user + ':' + self.proxy_pass), 'ascii')).decode('utf8')
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(
+             settings=crawler.settings
+        )
+
+    def process_request(self, request, spider):
+        request.meta['proxy'] = self.proxy_server
+        request.headers['Proxy-Authorization'] = self.proxy_authorization
+        spider.logger.debug('The {} Use AbuProxy And proxyAuth is {}'.format(request.url, self.proxy_authorization))

@@ -49,7 +49,7 @@ class LagoucrawlerSpider(scrapy.Spider):
         for url in self.parse_url(response):
             yield scrapy.Request(url=url, callback=self.parse_detail, cookies=cookies, dont_filter=True)
         # 翻页并解析
-        for pagenumber in range(2, 6):  # int(self.pagenumber) + 1):
+        for pagenumber in range(2, int(self.pagenumber) + 1):
             response = self.next_page()
             for url in self.parse_url(response):
                 yield scrapy.Request(url=url, callback=self.parse_detail, cookies=cookies, dont_filter=True)

@@ -27,13 +27,13 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 1
+DOWNLOAD_DELAY = 0.2
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-COOKIES_ENABLED = True
+COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
@@ -66,8 +66,8 @@ DOWNLOADER_MIDDLEWARES = {
     'LagouCrawler.middlewares.RandomUserAgentMiddleware': 542,
     # 禁用框架默认启动的UserAgentMiddleware
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-    #
-    'LagouCrawler.middlewares.RandomProxyMiddleware': 601
+    # 启用阿布云代理服务器中间件
+    'LagouCrawler.middlewares.AbuYunProxyMiddleware': 1
 }
 
 # Enable or disable extensions
@@ -136,3 +136,12 @@ PROXY_LIST = [
     'http://115.205.10.153:22193',
     'http://110.82.81.120:33957'
 ]
+
+# 阿布云代理服务器地址
+PROXY_SERVER = "http://http-dyn.abuyun.com:9020"
+# 阿布云代理隧道验证信息,注册阿布云购买服务后获取
+PROXY_USER = 'H9470L5HEARZ1FYD'
+PROXY_PASS = '02E02D1D773A6136'
+# 启用限速设置
+AUTOTHROTTLE_ENABLED = True
+AUTOTHROTTLE_START_DELAY = 0.2  # 初始下载延迟
