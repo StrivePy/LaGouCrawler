@@ -6,12 +6,10 @@
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 import time
-import random
 import os
 import json
 import base64
 from scrapy.http import HtmlResponse
-from scrapy.exceptions import IgnoreRequest
 from selenium.webdriver import Chrome
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -65,11 +63,9 @@ class LagoucrawlerDownloaderMiddleware(object):
         """
         self.brower.get(request.url)
         try:
-            # time.sleep(1)
             # 关掉城市选择窗口
             box_close = self.wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="cboxClose"]')))
             box_close.click()
-            # time.sleep(1)
             # 获取右上角的登录状态
             login_status = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="lg_tbar"]/div/ul/li[1]/a')))
             # 若右上角显示为登陆，则说明用户还没有登陆
@@ -149,7 +145,7 @@ class LagoucrawlerDownloaderMiddleware(object):
             keywords_input = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="search_input"]')))
             keywords_input.send_keys(self.job_keywords)
             # time.sleep(1)
-            # 定位搜索按钮并点击,有时候点击后页面不会发生跳转，原因大概是被重定向了。
+            # 定位搜索按钮并点击,有时候点击后页面不会发生跳转，原因是被重定向了。
             keywords_submit = self.wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="search_button"]')))
             keywords_submit.click()
             # 跳转到列表页等待待抓取的内容元素加载完成,如果被重定向,则跳转不到该页面，会报NoSuchElementException
@@ -171,13 +167,10 @@ class LagoucrawlerDownloaderMiddleware(object):
                 request=request
             )
             return response
-        except TimeoutException as e:
-            spider.logger.info('Locate Index Element Failed And Use Proxy')
+        except TimeoutException:
+            spider.logger.info('Locate Index Element Failed And Use Proxy Request Again')
         # except NoSuchElementException:
-            # 如果捕捉到该异常，说明页面被重定向了，没有正常跳转。
-            # 给request添加代理，并返回该request，重新请求初始请求。
-            proxy = 'http://219.141.153.41:80'
-            request.meta['proxy'] = proxy
+            # 如果捕捉到该异常，说明页面被重定向了，没有正常跳转,重新请求输入关键字页面
             return request
 
     def load_cookies(self, path):
@@ -196,8 +189,7 @@ class LagoucrawlerDownloaderMiddleware(object):
         """
         middleware的核心函数，每个request都会经过该函数。此函数过滤出初始request和详情页request，
         对于初始request进行验证登陆、cookies等一系列操作，然后将最后获取到的索引页response返回，对
-        于详情页的request则，不做任何处理。注意：对于详情页的request，识别出来后，必须返回一个None，
-        表示不干预操作，等待合适的downloader下载该request请求。
+        于详情页的request则，不做任何处理。
         :param request:
         :param spider:
         :return:
@@ -216,42 +208,6 @@ class LagoucrawlerDownloaderMiddleware(object):
                 # 登陆成功后的索引页的响应体，若不登录，请求响应提详情页面的url时，会重定向到登陆页面
                 response = self.fetch_index_page(request, spider)
                 return response
-        else:
-            # 必须返回一个None，让其它request能够继续被处理
-            return None
-
-
-class RandomProxyMiddleware(object):
-
-    def __init__(self, proxy_list=None):
-        self.proxy_list = proxy_list
-
-    @classmethod
-    def from_crawler(cls, crawler):
-        return cls(
-            proxy_list=crawler.settings.get('PROXY_LIST')
-        )
-
-    def process_response(self, request, response, spider):
-        """
-        在被默认RedirectMiddleware重定向之前或者被服务器发现被禁之后，给改请求添加代理
-        后重新请求，若再次被重定向或者被禁，则直接舍弃。
-        :param request:
-        :param response:
-        :param spider:
-        :return: 设置代理的request
-        """
-        if response.status in [302, 403, 500, 503]:
-            if not request.meta.get('auto_proxy'):
-                proxy = random.choice(self.proxy_list)
-                request.meta.update({'auto_proxy': True, 'proxy': proxy})
-                new_request = request.replace(meta=request.meta)
-                spider.logger.debug('The <{} {}> Use Proxy: {}'.format(response.status, request.url, proxy))
-                return new_request
-            else:
-                spider.logger.debug('The <{} {}> After Use Proxy Still Redirect'.format(response.status, request.url))
-                raise IgnoreRequest
-        return response
 
 
 class RandomUserAgentMiddleware(object):
@@ -284,6 +240,9 @@ class RandomUserAgentMiddleware(object):
         :return:
         """
         request.headers.setdefault('User-Agent', getattr(self.ua, self.ua_type))
+        # 每个请求禁止重定向
+        request.meta['dont_redirect'] = True
+        request.meta['handle_httpstatus_list'] = [301, 302]
         spider.logger.debug('The <{}> User Agent Is: {}'.format(request.url, getattr(self.ua, self.ua_type)))
 
 
@@ -308,4 +267,4 @@ class AbuYunProxyMiddleware(object):
     def process_request(self, request, spider):
         request.meta['proxy'] = self.proxy_server
         request.headers['Proxy-Authorization'] = self.proxy_authorization
-        spider.logger.debug('The {} Use AbuProxy And proxyAuth is {}'.format(request.url, self.proxy_authorization))
+        spider.logger.debug('The {} Use AbuProxy'.format(request.url))

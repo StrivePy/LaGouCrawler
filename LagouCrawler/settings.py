@@ -40,7 +40,6 @@ COOKIES_ENABLED = False
 
 # Override the default request headers:
 DEFAULT_REQUEST_HEADERS = {
-    # 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.146 Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'Accept-Encoding': 'gzip, deflate, br',
     'Accept-Language': 'zh-CN,zh;q=0.9',
@@ -61,13 +60,13 @@ RANDOM_UA_TYPE = 'random'
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    'LagouCrawler.middlewares.LagoucrawlerDownloaderMiddleware': 543,
-    # 在DownloaderMiddleware之前启用自定义的RandomUserAgentMiddlewaer
+    # 启用阿布云代理服务器中间件
+    'LagouCrawler.middlewares.AbuYunProxyMiddleware': 1,
+    # 在DownloaderMiddleware之前启用自定义的RandomUserAgentMiddleware
     'LagouCrawler.middlewares.RandomUserAgentMiddleware': 542,
     # 禁用框架默认启动的UserAgentMiddleware
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-    # 启用阿布云代理服务器中间件
-    'LagouCrawler.middlewares.AbuYunProxyMiddleware': 1
+    'LagouCrawler.middlewares.LagoucrawlerDownloaderMiddleware': 543,
 }
 
 # Enable or disable extensions
@@ -78,9 +77,9 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-# ITEM_PIPELINES = {
-#    'LagouCrawler.pipelines.LagoucrawlerPipeline': 300,
-# }
+ITEM_PIPELINES = {
+   'LagouCrawler.pipelines.LagoucrawlerPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -112,9 +111,7 @@ PASSWORD = '175458778sd'
 CITY = '杭州站'
 
 # 搜索职位
-# JOB_KEYWORDS = 'Python 爬虫'
-
-JOB_KEYWORDS = 'java后端'
+JOB_KEYWORDS = 'Python 爬虫'
 
 # Mongodb地址
 MONGO_URI = 'localhost'
@@ -122,20 +119,6 @@ MONGO_URI = 'localhost'
 MONGO_DB = 'job'
 # Mongodb表名
 MONGO_COLLECTION = 'works'
-
-# 代理列表
-PROXY_LIST = [
-    'http://113.128.9.11:23143',
-    'http://49.85.3.252:35378',
-    'http://220.162.155.7:42883',
-    'http://121.227.76.45:31745',
-    'http://123.55.93.229:21843',
-    'http://113.128.30.242:30734',
-    'http://114.218.249.134:47110',
-    'http://182.39.4.9:48393',
-    'http://115.205.10.153:22193',
-    'http://110.82.81.120:33957'
-]
 
 # 阿布云代理服务器地址
 PROXY_SERVER = "http://http-dyn.abuyun.com:9020"

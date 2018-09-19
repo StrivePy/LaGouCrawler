@@ -30,11 +30,13 @@ class LagoucrawlerSpider(scrapy.Spider):
     def parse_index(self, response):
         """
         解析第一页列表页，拿到各个招聘详情页url，并发起请求；然后进行翻页做操，拿到每页
-        列表页各个窄频详情页的url，并发起请求。注意：详情页请求发起大概55个后（抓取的时
-        候，一共有4页，每页15个招聘，供60个招聘详情），最后5个总是被重定向到最初始输入
-        搜索关键字的页面，即使设置了DOWNLOAD_DELAY也是没用。应该是被服务器识别出了是机
-        器人了，初步思路是在middlewares的process_response()函数中，通过判断response的
-        status_code,对重定向的request加上代理后，再次发起request。
+        列表页各个详情页的url，并发起请求。注意：以杭州Python爬虫职位为例详情页请求发起
+        大概55个后（抓取的时候，一共有4页，每页15个招聘，供60个招聘详情），最后5个总是
+        被重定向到最初始输入搜索关键字的页面，即使设置了DOWNLOAD_DELAY也是没用。应该是
+        被服务器识别出了是机器人了，初步思路是在middlewares的process_response()函数中，
+        通过判断response的status_code,对重定向的request加上代理后，再次发起request，
+        但是这个思路没能实现，需要更深层次的理解框架，所以使用了阿布云代理的动态代理，
+        让每个request都通过代理服务器发出请求。
         :param response: 经middleware筛选并处理后的第一页详情页response
         :return:
         """
@@ -42,29 +44,14 @@ class LagoucrawlerSpider(scrapy.Spider):
         # 初始化spider中的brower和wait
         self.brower = response.meta['brower']
         self.wait = response.meta['wait']
-        # 发起请求的request必须携带cookies，不然请求几个(5个)后，会被重定向
-        # 可以从brower中或者本地文件中拿到cookies
-        cookies = self.load_cookies()
         # 解析索引页各项招聘详情页url
         for url in self.parse_url(response):
-            yield scrapy.Request(url=url, callback=self.parse_detail, cookies=cookies, dont_filter=True)
+            yield scrapy.Request(url=url, callback=self.parse_detail, dont_filter=True)
         # 翻页并解析
         for pagenumber in range(2, int(self.pagenumber) + 1):
             response = self.next_page()
             for url in self.parse_url(response):
-                yield scrapy.Request(url=url, callback=self.parse_detail, cookies=cookies, dont_filter=True)
-
-    def load_cookies(self):
-        """
-        从response的meta字典的brower属性中获得cookies，brower中的cookies是登陆获取的或者是从本地文件
-        加载的
-        :return: 返回包含cookies的字典
-        """
-        cookies = self.brower.get_cookies()
-        cooke_dict = {}
-        for cookie in cookies:
-            cooke_dict[cookie['name']] = cookie['value']
-        return cooke_dict
+                yield scrapy.Request(url=url, callback=self.parse_detail, dont_filter=True)
 
     def next_page(self):
         """

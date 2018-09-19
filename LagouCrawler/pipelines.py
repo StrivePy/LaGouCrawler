@@ -52,7 +52,8 @@ class LagoucrawlerPipeline(object):
         condition = {'company_name': item.get('company_name')}
         # upsert参数设置为True后，若数据库中没有该条记录，会执行插入操作；
         # 同时，使用update_one()函数，也可以完成去重操作。
-        self.collection.update_one(condition, {'$set': item}, upsert=True)
+        result = self.collection.update_one(condition, {'$set': item}, upsert=True)
+        spider.logger.debug('The Matched Item is: {} And The Modified Item is: {}'.format(result.matched_count, result.modified_count))
         return item
 
     def close_spider(self, spider):
