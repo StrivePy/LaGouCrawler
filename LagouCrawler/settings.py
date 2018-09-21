@@ -103,9 +103,9 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # 用户名
-USERNAME = '17386601610'
+USERNAME = '17386601XXX'
 # 用户密码
-PASSWORD = '175458778sd'
+PASSWORD = '17545877XXX'
 
 # 选择城市
 CITY = '杭州站'
