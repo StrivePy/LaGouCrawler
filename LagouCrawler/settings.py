@@ -27,26 +27,29 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 0.2
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-#COOKIES_ENABLED = False
+COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
 DEFAULT_REQUEST_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.146 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-  'Accept-Encoding': 'gzip, deflate, br',
-  'Accept-Language': 'zh-CN,zh;q=0.9',
-  'Host': 'www.lagou.com',
-  'Referer': 'https://www.lagou.com/'
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Accept-Language': 'zh-CN,zh;q=0.9',
+    'Host': 'www.lagou.com',
+    'Referer': 'https://www.lagou.com/',
+    'Connection': 'keep-alive'
 }
+
+# 设置UA为随机挑选模式
+RANDOM_UA_TYPE = 'random'
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
@@ -57,7 +60,13 @@ DEFAULT_REQUEST_HEADERS = {
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-   'LagouCrawler.middlewares.LagoucrawlerDownloaderMiddleware': 543,
+    # 启用阿布云代理服务器中间件
+    'LagouCrawler.middlewares.AbuYunProxyMiddleware': 1,
+    # 在DownloaderMiddleware之前启用自定义的RandomUserAgentMiddleware
+    'LagouCrawler.middlewares.RandomUserAgentMiddleware': 542,
+    # 禁用框架默认启动的UserAgentMiddleware
+    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+    'LagouCrawler.middlewares.LagoucrawlerDownloaderMiddleware': 543,
 }
 
 # Enable or disable extensions
@@ -68,9 +77,9 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'LagouCrawler.pipelines.LagoucrawlerPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'LagouCrawler.pipelines.LagoucrawlerPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -103,3 +112,19 @@ CITY = '杭州站'
 
 # 搜索职位
 JOB_KEYWORDS = 'Python 爬虫'
+
+# Mongodb地址
+MONGO_URI = 'localhost'
+# Mongodb库名
+MONGO_DB = 'job'
+# Mongodb表名
+MONGO_COLLECTION = 'works'
+
+# 阿布云代理服务器地址
+PROXY_SERVER = "http://http-dyn.abuyun.com:9020"
+# 阿布云代理隧道验证信息,注册阿布云购买服务后获取
+PROXY_USER = 'H9470L5HEARZ1FYD'
+PROXY_PASS = '02E02D1D773A6136'
+# 启用限速设置
+AUTOTHROTTLE_ENABLED = True
+AUTOTHROTTLE_START_DELAY = 0.2  # 初始下载延迟
