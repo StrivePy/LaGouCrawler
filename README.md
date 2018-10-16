@@ -58,7 +58,7 @@
           
         * *save_cookies()*
         
-          > 将cookies保存为本地文件
+          > 将cookies保存为本地文件。
           
         * *fetch_index_page()*
         
@@ -70,4 +70,30 @@
           
         * *process_request()*
         
-          > DownloaderMiddleware的核心方法，
+          > DownloaderMiddleware的核心方法，过滤出带有index_flag标志的请求后，先判断是否为登陆状态，若已经登陆，则直接调用*fetch_index_page()*，否则判断本地是否有cookies文件，若有则加载本地文件后调用*fetch_index_page()*，否则进行登陆后再调用*fetch_index_page()*。
+      
+    * RandomUserAgentMiddleware类
+      
+      > 随机User-Agent中间件，给每一个请求添加一个随机的User-Agent，并禁止重定向(访问频繁后，页面会被重定向到初始的输入关键字页面)。
+      
+    * AbuYunProxyMiddleware类
+    
+      > 接入阿布云中间件，阿布云服务器动态IP 1秒最多请求5次(加钱可拓展)，需要在settings.py配置下载延时。
+      
+* **LagouCrawler.pipelines.py**
+
+  > ItemPipeline模块，主要用于对提取后数据的处理，这里主要将提取到的数据存入Mongodb数据库。
+  
+    * LagoucrawlerPipeline类
+    
+      > Mongodb数据库的初始化，数据的存储操作在该类中完成。
+      
+* **LagouCrawler.settings.py**
+
+  > 配置文件：
+    
+    * 关闭robotstxt，设置ROBOTSTXT_OBEY = False
+    * 设置下载延时，设置DOWNLOAD_DELAY = 0.2
+    * 禁用cookie，设置COOKIES_ENABLED = False
+    * 其它详细配置见代码注释
+    
